@@ -1,46 +1,49 @@
 # terraform-plan-comment-action
 
-Terraform の実行計画を Pull Request にコメントする composite action。
+[日本語](README.ja.md)
 
-この action は `terraform` を実行しない。計画の実行は呼び出し側に任せ、その結果
-（終了コードと `terraform show` の出力ファイル）を受け取って整形・投稿するだけ。
-呼び出し側で使っているバージョンとの差異が生まれないようにするため。
+A composite action that comments Terraform execution plans on pull requests.
 
-依存するのは `terraform show -json` の JSON スキーマ（`format_version` 1.x）のみ。
-OpenTofu の `tofu show -json` の出力も渡せる。
+This action never runs `terraform` itself. The caller runs the plan and passes the result —
+an exit code and the files written by `terraform show` — and this action formats it and posts
+the comment. Keeping execution on the caller's side means there is no second Terraform version
+that could drift from the one used to apply.
 
-ランナーに `gh` と `jq` があることを前提とする（GitHub-hosted runner には両方入っている）。
+Its only dependency is the JSON schema of `terraform show -json` (`format_version` 1.x).
+The output of OpenTofu's `tofu show -json` works just as well.
 
-## inputs
+The runner is expected to have `gh` and `jq` available (GitHub-hosted runners ship both).
 
-| input | 必須 | デフォルト | 説明 |
+## Inputs
+
+| Input | Required | Default | Description |
 |---|---|---|---|
-| `exitcode` | ✓ | — | 計画の終了コード（`-detailed-exitcode` 付きで実行したときの値）。`0` = 変更なし、`2` = 変更あり、それ以外 = 失敗 |
-| `plan-json` | — | `''` | `terraform show -json <planfile>` の出力ファイルパス。`exitcode` が `2` のときのみ参照される |
-| `plan-text` | — | `''` | `terraform show -no-color <planfile>` の出力ファイルパス。同上 |
-| `error-message` | — | `''` | 失敗時にコメントへ載せる文字列 |
-| `github-token` | ✓ | — | コメント投稿に使うトークン。`pull-requests: write` が必要 |
-| `pr-number` | — | `github.event.pull_request.number` | コメント先の PR 番号 |
+| `exitcode` | ✓ | — | Exit code of the plan run (with `-detailed-exitcode`). `0` = no changes, `2` = changes, anything else = failure |
+| `plan-json` | — | `''` | Path to the output of `terraform show -json <planfile>`. Only read when `exitcode` is `2` |
+| `plan-text` | — | `''` | Path to the output of `terraform show -no-color <planfile>`. Only read when `exitcode` is `2` |
+| `error-message` | — | `''` | Message to include in the comment on failure |
+| `github-token` | ✓ | — | Token used to post the comment. Requires `pull-requests: write` |
+| `pr-number` | — | `github.event.pull_request.number` | Pull request number to comment on |
 
-`plan-json` / `plan-text` のパスは **ワークスペースルートからの相対パスか絶対パス**。
-composite action 内のステップは `$GITHUB_WORKSPACE` を作業ディレクトリとして実行され、
-呼び出し側ジョブの `defaults.run.working-directory` は効かない。
-`${{ runner.temp }}` 配下の絶対パスに書き出して渡すのが確実。
+Paths given to `plan-json` and `plan-text` are **relative to the workspace root, or absolute**.
+Steps inside a composite action run from `$GITHUB_WORKSPACE`, and the calling job's
+`defaults.run.working-directory` does not apply to them. Writing the files to an absolute path
+under `${{ runner.temp }}` is the reliable way to pass them.
 
-`exitcode` が `2` 以外のときは計画ファイルが存在せず `terraform show` を実行できないため、
-`plan-json` / `plan-text` は必須にしていない。呼び出し側の `terraform show` ステップには
-`if: steps.<plan step id>.outputs.exitcode == '2'` を付けること。
+Neither file is required, because when `exitcode` is anything other than `2` there is no plan
+file and `terraform show` cannot run. Guard the caller's `terraform show` step with
+`if: steps.<plan step id>.outputs.exitcode == '2'`.
 
-## outputs
+## Outputs
 
-なし。
+None.
 
-## 責務の範囲
+## Scope
 
-失敗時に job を失敗させるのは呼び出し側の責務。この action はコメントするだけで、
-自身は異常終了しない（inputs の指定ミスを除く）。
+Failing the job on a failed plan is the caller's responsibility. This action only posts the
+comment; it does not exit non-zero (except when its own inputs are inconsistent).
 
-## 使用例
+## Usage
 
 ```yaml
 permissions:
@@ -88,9 +91,21 @@ jobs:
         run: exit 1
 ```
 
-`steps.plan.outputs.exitcode` と `steps.plan.outputs.stderr` は
-`hashicorp/setup-terraform` のラッパーが提供する出力。ラッパーを無効にしている場合は
-自前で終了コードを拾って渡す。
+`steps.plan.outputs.exitcode` and `steps.plan.outputs.stderr` come from the
+`hashicorp/setup-terraform` wrapper. If you disable the wrapper, capture the exit code yourself
+and pass it in.
 
-上の例では読みやすさのためタグ表記にしているが、実際に使うときは commit SHA で
-ピンすることを推奨する。
+The example above uses a tag for readability. Pin to a full commit SHA in real use.
+
+## Note on the comment language
+
+The comment body is written in Japanese. There is no input to switch it yet — open an issue if
+you need one.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE)
