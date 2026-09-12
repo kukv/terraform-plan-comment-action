@@ -1,0 +1,48 @@
+name: Terraform Plan Comment
+description: Comment Terraform execution plans on pull requests
+
+inputs:
+  exitcode:
+    description: 'Exit code of the plan run (with -detailed-exitcode). 0 = no changes, 2 = changes, anything else = failure'
+    required: true
+  plan-json:
+    description: 'Path to the output of `terraform show -json <planfile>`. Relative to the workspace root, or absolute. Only read when exitcode is 2'
+    required: false
+    default: ''
+  plan-text:
+    description: 'Path to the output of `terraform show -no-color <planfile>`. Relative to the workspace root, or absolute. Only read when exitcode is 2'
+    required: false
+    default: ''
+  error-message:
+    description: 'Message to include in the comment on failure (typically the stderr output of the caller)'
+    required: false
+    default: ''
+  github-token:
+    description: 'Token used to post the comment. Requires pull-requests: write'
+    required: true
+  pr-number:
+    description: 'Pull request number to comment on. Defaults to github.event.pull_request.number'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Build and post comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        EXITCODE: ${{ inputs.exitcode }}
+        PLAN_JSON: ${{ inputs.plan-json }}
+        PLAN_TEXT: ${{ inputs.plan-text }}
+        ERROR_MESSAGE: ${{ inputs.error-message }}
+        PR_NUMBER: ${{ inputs.pr-number || github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+        COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+
+        comment_file="${RUNNER_TEMP}/terraform-plan-comment.md"
+        python3 "${GITHUB_ACTION_PATH}/scripts/build_comment.py" > "$comment_file"
+        gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file "$comment_file"
