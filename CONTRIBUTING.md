@@ -4,14 +4,22 @@ Thanks for taking the time to improve terraform-plan-comment-action.
 
 ## Getting started
 
-The whole action is `action.yml`: an input definition and a single bash step that builds the
-comment body and posts it with `gh`. There is nothing to install and nothing to build.
+There are two files. `scripts/build-comment.sh` turns a plan result into a markdown comment on
+stdout, reading everything it needs from the environment. `action.yml` declares the inputs, runs
+that script, and posts the output with `gh`. There is nothing to install and nothing to build.
 
 ```bash
-actionlint                          # lint the workflows
-yq -r '.runs.steps[0].run' action.yml > /tmp/action-script.sh
-shellcheck --shell=bash /tmp/action-script.sh
+actionlint                            # lint the workflows
+shellcheck scripts/build-comment.sh   # lint the script
+
+# run the script on a plan you have lying around
+EXITCODE=2 PLAN_JSON=plan.json PLAN_TEXT=plan.txt \
+  COMMIT_SHA=0000000 RUN_URL=https://example.com \
+  ./scripts/build-comment.sh
 ```
+
+Keeping the script free of GitHub Actions specifics is deliberate: it takes plain environment
+variables, so you can run it by hand against a real plan and read the result before pushing.
 
 Keep the action free of a Terraform dependency. It reads the output of `terraform show`; it must
 never run `terraform` itself. A second Terraform version inside the action is exactly the drift
@@ -25,9 +33,10 @@ this action exists to avoid.
    block as-is — do not start parsing it.
 3. Stick to the documented fields of the plan JSON (`resource_changes[].change.actions`,
    `.change.importing`, `.previous_address`). They are stable across `format_version` 1.x.
-4. Pass every expression through `env:` rather than interpolating `${{ }}` into the script body,
-   so the script stays valid shell and shellcheck can read it.
-5. Update both `README.md` and `README.ja.md` when inputs or behavior change.
+4. Keep `${{ }}` out of the script. `action.yml` maps expressions to environment variables and
+   the script reads those, so it stays runnable and lintable on its own.
+5. The comment body is English. Keep it that way.
+6. Update both `README.md` and `README.ja.md` when inputs or behavior change.
 
 ## Pull requests
 

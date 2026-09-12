@@ -43,6 +43,9 @@ None.
 Failing the job on a failed plan is the caller's responsibility. This action only posts the
 comment; it does not exit non-zero (except when its own inputs are inconsistent).
 
+The comment body is built by `scripts/build-comment.sh`, which writes markdown to stdout from
+the environment alone. `action.yml` only wires the inputs to it and posts the result.
+
 ## Usage
 
 ```yaml
@@ -96,11 +99,6 @@ jobs:
 and pass it in.
 
 The example above uses a tag for readability. Pin to a full commit SHA in real use.
-
-## Note on the comment language
-
-The comment body is written in Japanese. There is no input to switch it yet — open an issue if
-you need one.
 
 ## Contributing
 

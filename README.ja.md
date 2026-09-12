@@ -42,6 +42,9 @@ composite action 内のステップは `$GITHUB_WORKSPACE` を作業ディレク
 失敗時に job を失敗させるのは呼び出し側の責務。この action はコメントするだけで、
 自身は異常終了しない（inputs の指定ミスを除く）。
 
+コメント本文は `scripts/build-comment.sh` が環境変数だけを読んで標準出力に書く。
+`action.yml` は inputs をそれに渡して結果を投稿するだけ。本文は英語。
+
 ## 使用例
 
 ```yaml
