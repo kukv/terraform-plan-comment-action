@@ -12,7 +12,7 @@ that could drift from the one used to apply.
 Its only dependency is the JSON schema of `terraform show -json` (`format_version` 1.x).
 The output of OpenTofu's `tofu show -json` works just as well.
 
-The runner is expected to have `gh` and `jq` available (GitHub-hosted runners ship both).
+The runner is expected to have `gh` and `python3` available (GitHub-hosted runners ship both).
 
 ## Inputs
 
@@ -43,8 +43,9 @@ None.
 Failing the job on a failed plan is the caller's responsibility. This action only posts the
 comment; it does not exit non-zero (except when its own inputs are inconsistent).
 
-The comment body is built by `scripts/build-comment.sh`, which writes markdown to stdout from
-the environment alone. `action.yml` only wires the inputs to it and posts the result.
+The comment body is built by `scripts/build_comment.py` (standard library only), which writes
+markdown to stdout from the environment alone. `action.yml` only wires the inputs to it and posts
+the result. `tests/run.sh` checks the output against the expected markdown in `tests/fixtures/`.
 
 ## Usage
 

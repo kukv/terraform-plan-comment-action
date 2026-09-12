@@ -11,7 +11,7 @@ Terraform の実行計画を Pull Request にコメントする composite action
 依存するのは `terraform show -json` の JSON スキーマ（`format_version` 1.x）のみ。
 OpenTofu の `tofu show -json` の出力も渡せる。
 
-ランナーに `gh` と `jq` があることを前提とする（GitHub-hosted runner には両方入っている）。
+ランナーに `gh` と `python3` があることを前提とする（GitHub-hosted runner には両方入っている）。
 
 ## inputs
 
@@ -42,8 +42,9 @@ composite action 内のステップは `$GITHUB_WORKSPACE` を作業ディレク
 失敗時に job を失敗させるのは呼び出し側の責務。この action はコメントするだけで、
 自身は異常終了しない（inputs の指定ミスを除く）。
 
-コメント本文は `scripts/build-comment.sh` が環境変数だけを読んで標準出力に書く。
-`action.yml` は inputs をそれに渡して結果を投稿するだけ。本文は英語。
+コメント本文は `scripts/build_comment.py`（標準ライブラリのみ）が環境変数だけを読んで
+標準出力に書く。`action.yml` は inputs をそれに渡して結果を投稿するだけ。本文は英語。
+出力は `tests/fixtures/` の期待値と `tests/run.sh` で突き合わせている。
 
 ## 使用例
 

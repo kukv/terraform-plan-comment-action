@@ -44,5 +44,5 @@ runs:
         set -euo pipefail
 
         comment_file="${RUNNER_TEMP}/terraform-plan-comment.md"
-        "${GITHUB_ACTION_PATH}/scripts/build-comment.sh" > "$comment_file"
+        python3 "${GITHUB_ACTION_PATH}/scripts/build_comment.py" > "$comment_file"
         gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file "$comment_file"

@@ -1,0 +1,26 @@
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+  ~ update in-place
+  - destroy
+
+Terraform will perform the following actions:
+
+  # github_repository.added will be created
+  + resource "github_repository" "added" {
+      + name       = "added"
+      + visibility = "public"
+    }
+
+  # github_repository.changed will be updated in-place
+  ~ resource "github_repository" "changed" {
+        name        = "changed"
+      ~ description = "old" -> "new"
+    }
+
+  # github_repository.deleted will be destroyed
+  - resource "github_repository" "deleted" {
+      - name = "deleted" -> null
+    }
+
+Plan: 1 to add, 1 to change, 1 to destroy.

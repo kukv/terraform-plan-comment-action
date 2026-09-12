@@ -1,0 +1,39 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.16.1",
+  "resource_changes": [
+    {
+      "address": "github_repository.added",
+      "change": { "actions": ["create"] }
+    },
+    {
+      "address": "github_repository.changed",
+      "change": { "actions": ["update"] }
+    },
+    {
+      "address": "github_repository.deleted",
+      "change": { "actions": ["delete"] }
+    },
+    {
+      "address": "github_repository.replaced",
+      "change": { "actions": ["delete", "create"] }
+    },
+    {
+      "address": "github_repository.imported",
+      "change": { "actions": ["no-op"], "importing": { "id": "imported" } }
+    },
+    {
+      "address": "github_repository.moved_to",
+      "previous_address": "github_repository.moved_from",
+      "change": { "actions": ["no-op"] }
+    },
+    {
+      "address": "github_repository.untouched",
+      "change": { "actions": ["no-op"] }
+    },
+    {
+      "address": "data.github_user.current",
+      "change": { "actions": ["read"] }
+    }
+  ]
+}

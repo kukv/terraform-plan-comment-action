@@ -4,28 +4,36 @@ Thanks for taking the time to improve terraform-plan-comment-action.
 
 ## Getting started
 
-There are two files. `scripts/build-comment.sh` turns a plan result into a markdown comment on
+There are two files. `scripts/build_comment.py` turns a plan result into a markdown comment on
 stdout, reading everything it needs from the environment. `action.yml` declares the inputs, runs
-that script, and posts the output with `gh`. There is nothing to install and nothing to build.
+that script, and posts the output with `gh`. The script uses the **standard library only** —
+nothing to install, nothing to build.
 
 ```bash
-actionlint                            # lint the workflows
-shellcheck scripts/build-comment.sh   # lint the script
+./tests/run.sh   # compare generated comments against the expected markdown
+actionlint       # lint the workflows
 
 # run the script on a plan you have lying around
 EXITCODE=2 PLAN_JSON=plan.json PLAN_TEXT=plan.txt \
   COMMIT_SHA=0000000 RUN_URL=https://example.com \
-  ./scripts/build-comment.sh
+  python3 scripts/build_comment.py
 ```
 
 Keeping the script free of GitHub Actions specifics is deliberate: it takes plain environment
 variables, so you can run it by hand against a real plan and read the result before pushing.
+
+Keep the standard-library-only rule. An action that installs dependencies to format a comment
+would make every consumer's workflow slower and its supply chain wider.
 
 Keep the action free of a Terraform dependency. It reads the output of `terraform show`; it must
 never run `terraform` itself. A second Terraform version inside the action is exactly the drift
 this action exists to avoid.
 
 ## Changing the comment
+
+Every change to the output needs a fixture. `tests/fixtures/<case>/expected.md` is the exact
+markdown the script must produce; `tests/run.sh` diffs the two. Update the expected file in the
+same commit as the change, and read the diff — it is the review of what consumers will see.
 
 1. Keep the three branches of `exitcode` intact: `0` (no changes), `2` (changes), anything else
    (failure). Each one must produce a comment.
@@ -40,8 +48,8 @@ this action exists to avoid.
 
 ## Pull requests
 
-- CI runs `security.yml` on every pull request (gitleaks, osv-scanner, zizmor, actionlint).
-  All of it must pass.
+- CI runs on every pull request: `ci.yml` (the fixture tests) and `security.yml` (gitleaks,
+  osv-scanner, zizmor, actionlint). All of them must pass.
 - Pin any GitHub Action you add to a full commit SHA with a `# vX.Y.Z` comment, and pin Docker
   images by digest. Renovate follows them through the `# renovate:` annotations.
 - Commit messages use a `feat:` / `fix:` / `docs:` / `chore:` / `ci:` prefix.
