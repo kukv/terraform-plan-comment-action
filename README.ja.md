@@ -21,6 +21,7 @@ OpenTofu の `tofu show -json` の出力も渡せる。
 | `plan-json` | — | `''` | `terraform show -json <planfile>` の出力ファイルパス。`exitcode` が `2` のときのみ参照される |
 | `plan-text` | — | `''` | `terraform show -no-color <planfile>` の出力ファイルパス。同上 |
 | `error-message` | — | `''` | 失敗時にコメントへ載せる文字列 |
+| `title` | — | `''` | 計画対象の名前。コメントの見出しに載る。1 つの PR に複数の plan コメントが付く場合に使う |
 | `github-token` | ✓ | — | コメント投稿に使うトークン。`pull-requests: write` が必要 |
 | `pr-number` | — | `github.event.pull_request.number` | コメント先の PR 番号 |
 
@@ -32,6 +33,11 @@ composite action 内のステップは `$GITHUB_WORKSPACE` を作業ディレク
 `exitcode` が `2` 以外のときは計画ファイルが存在せず `terraform show` を実行できないため、
 `plan-json` / `plan-text` は必須にしていない。呼び出し側の `terraform show` ステップには
 `if: steps.<plan step id>.outputs.exitcode == '2'` を付けること。
+
+`title` を渡すと見出しが `### 🏗 Terraform Plan (<title>)`（失敗時は
+`### ❌ Terraform Plan (<title>): failed`）になる。省略すれば見出しは従来どおり。
+composite action からは `matrix` コンテキストを参照できないため、matrix ジョブでは
+`title: ${{ matrix.name }}` のように呼び出し側で渡す。
 
 ## outputs
 

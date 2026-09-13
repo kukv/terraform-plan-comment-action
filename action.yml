@@ -17,6 +17,10 @@ inputs:
     description: 'Message to include in the comment on failure (typically the stderr output of the caller)'
     required: false
     default: ''
+  title:
+    description: 'Name of what was planned, shown in the comment heading. Useful when one pull request gets several plan comments (matrix jobs)'
+    required: false
+    default: ''
   github-token:
     description: 'Token used to post the comment. Requires pull-requests: write'
     required: true
@@ -36,6 +40,7 @@ runs:
         PLAN_JSON: ${{ inputs.plan-json }}
         PLAN_TEXT: ${{ inputs.plan-text }}
         ERROR_MESSAGE: ${{ inputs.error-message }}
+        TITLE: ${{ inputs.title }}
         PR_NUMBER: ${{ inputs.pr-number || github.event.pull_request.number }}
         REPO: ${{ github.repository }}
         COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

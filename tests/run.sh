@@ -53,6 +53,12 @@ golden failed 1 ERROR_MESSAGE='Error: Invalid resource type
   on main.tf line 1, in resource "github_nope" "x":
    1: resource "github_nope" "x" {'
 
+golden titled 0 TITLE=zone-b8m.app
+golden titled-changes 2 TITLE=zone-b8m.app \
+  PLAN_JSON=tests/fixtures/changes/plan.json \
+  PLAN_TEXT=tests/fixtures/changes/plan.txt
+golden titled-failed 1 TITLE=zone-b8m.app ERROR_MESSAGE='Error: Invalid resource type'
+
 expect_error "missing plan files when exitcode is 2" 2
 
 exit $fail
