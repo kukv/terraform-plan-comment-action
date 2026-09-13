@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest something this action should do
+labels: ["Kind: Feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This action turns a plan result into a pull request comment, using the standard library
+        only. It never runs `terraform` itself, and it does not parse the text output of
+        `terraform show -no-color`. Requests that need either of those are out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem you want solved
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+      description: If it changes the comment, sketch the markdown you would expect.
