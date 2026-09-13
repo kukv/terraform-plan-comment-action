@@ -1,0 +1,40 @@
+name: Bug report
+description: Something does not work as described
+labels: ["Kind: Bug Fix"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A wrong plan is a Terraform problem, not this action's — this action only formats the
+        output of `terraform show`. Do not paste plans that contain secrets or internal
+        hostnames; redact them first.
+  - type: input
+    id: action-version
+    attributes:
+      label: Action version
+      placeholder: "kukv/terraform-plan-comment-action@<sha> # v1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected in the comment, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow snippet
+      description: The step that calls this action, with its inputs.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >-
+        The output of the failing step, including the exit code of the plan run, and the
+        redacted plan output (`terraform show -json` / `-no-color`) that reproduces it.
+      render: shell
