@@ -13,6 +13,7 @@ Environment:
     PLAN_JSON     path to `terraform show -json <planfile>` output (required when EXITCODE is 2)
     PLAN_TEXT     path to `terraform show -no-color <planfile>` output (required when EXITCODE is 2)
     ERROR_MESSAGE message to show on failure
+    TITLE         name of what was planned, shown in the heading (for matrix jobs)
     COMMIT_SHA    commit the plan ran against
     RUN_URL       URL of the workflow run
 """
@@ -22,12 +23,18 @@ import os
 import re
 import sys
 
-HEADING = "### 🏗 Terraform Plan"
-FAILED_HEADING = "### ❌ Terraform Plan: failed"
-
 # Terraform indents the action marker; move it to the start of the line so the
 # diff block colours the change.
 DIFF_MARKER = re.compile(r"^([ \t]*)([-+~])", re.MULTILINE)
+
+
+def headings(title):
+    """Return the (normal, failed) headings, scoped by TITLE when it is set."""
+    scope = " ({})".format(title) if title else ""
+    return (
+        "### 🏗 Terraform Plan" + scope,
+        "### ❌ Terraform Plan" + scope + ": failed",
+    )
 
 
 def icon(change):
@@ -81,14 +88,14 @@ def summary_counts(plan):
     return counts
 
 
-def no_changes():
-    return [HEADING, "", "No infrastructure changes."]
+def no_changes(heading):
+    return [heading, "", "No infrastructure changes."]
 
 
-def changes(plan, plan_text):
+def changes(plan, plan_text, heading):
     counts = summary_counts(plan)
     lines = [
-        HEADING,
+        heading,
         "",
         "| ➕ Add | 🔄 Change | ♻️ Replace | ➖ Destroy | 📥 Import | 📦 Move |",
         "|:--:|:--:|:--:|:--:|:--:|:--:|",
@@ -119,8 +126,8 @@ def changes(plan, plan_text):
     return lines
 
 
-def failed(error_message):
-    return [FAILED_HEADING, "", "```", error_message, "```"]
+def failed(error_message, heading):
+    return [heading, "", "```", error_message, "```"]
 
 
 def read(path):
@@ -132,9 +139,10 @@ def main():
     exitcode = os.environ.get("EXITCODE", "")
     commit_sha = os.environ.get("COMMIT_SHA", "")
     run_url = os.environ.get("RUN_URL", "")
+    heading, failed_heading = headings(os.environ.get("TITLE", "").strip())
 
     if exitcode == "0":
-        lines = no_changes()
+        lines = no_changes(heading)
     elif exitcode == "2":
         plan_json = os.environ.get("PLAN_JSON", "")
         plan_text = os.environ.get("PLAN_TEXT", "")
@@ -144,9 +152,9 @@ def main():
                 file=sys.stderr,
             )
             return 1
-        lines = changes(json.loads(read(plan_json)), read(plan_text))
+        lines = changes(json.loads(read(plan_json)), read(plan_text), heading)
     else:
-        lines = failed(os.environ.get("ERROR_MESSAGE", ""))
+        lines = failed(os.environ.get("ERROR_MESSAGE", ""), failed_heading)
 
     lines += [
         "",

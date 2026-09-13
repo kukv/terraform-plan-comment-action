@@ -22,6 +22,7 @@ The runner is expected to have `gh` and `python3` available (GitHub-hosted runne
 | `plan-json` | — | `''` | Path to the output of `terraform show -json <planfile>`. Only read when `exitcode` is `2` |
 | `plan-text` | — | `''` | Path to the output of `terraform show -no-color <planfile>`. Only read when `exitcode` is `2` |
 | `error-message` | — | `''` | Message to include in the comment on failure |
+| `title` | — | `''` | Name of what was planned, shown in the comment heading. Useful when one pull request gets several plan comments |
 | `github-token` | ✓ | — | Token used to post the comment. Requires `pull-requests: write` |
 | `pr-number` | — | `github.event.pull_request.number` | Pull request number to comment on |
 
@@ -33,6 +34,11 @@ under `${{ runner.temp }}` is the reliable way to pass them.
 Neither file is required, because when `exitcode` is anything other than `2` there is no plan
 file and `terraform show` cannot run. Guard the caller's `terraform show` step with
 `if: steps.<plan step id>.outputs.exitcode == '2'`.
+
+With `title` set, the heading becomes `### 🏗 Terraform Plan (<title>)` (and
+`### ❌ Terraform Plan (<title>): failed` on failure). Leave it out and the heading is unchanged.
+A composite action cannot read the `matrix` context, so a matrix job has to pass the value itself:
+`title: ${{ matrix.name }}`.
 
 ## Outputs
 
