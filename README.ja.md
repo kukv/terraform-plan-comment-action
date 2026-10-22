@@ -55,6 +55,9 @@ composite action からは `matrix` コンテキストを参照できないた�
 ## 使用例
 
 ```yaml
+on:
+  pull_request:
+
 permissions:
   contents: read
 
@@ -65,11 +68,11 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.16.1
 
@@ -87,7 +90,7 @@ jobs:
           terraform show -no-color tfplan > "${RUNNER_TEMP}/plan.txt"
 
       - name: Comment
-        uses: kukv/terraform-plan-comment-action@v1
+        uses: kukv/terraform-plan-comment-action@9e0f42a0e418a10d7505a4978ebcdf9143bfaaaa # v1.0.0
         with:
           exitcode: ${{ steps.plan.outputs.exitcode }}
           plan-json: ${{ runner.temp }}/plan.json
@@ -104,8 +107,10 @@ jobs:
 `hashicorp/setup-terraform` のラッパーが提供する出力。ラッパーを無効にしている場合は
 自前で終了コードを拾って渡す。
 
-上の例では読みやすさのためタグ表記にしているが、実際に使うときは commit SHA で
-ピンすることを推奨する。
+この例は `pull_request` で動かす前提。`pull_request_target` に変えてはいけない。PR の
+Terraform コードが、ベースリポジトリに書き込めるトークンを持った状態で実行されてしまう。
+
+Action は commit SHA で固定し、バージョンをコメントに書いている。実際に使うときも同じように固定する。
 
 ## コントリビュート
 
