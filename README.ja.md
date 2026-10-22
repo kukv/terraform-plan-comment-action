@@ -68,11 +68,11 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@<commit sha> # vX.Y.Z
         with:
           persist-credentials: false
 
-      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      - uses: hashicorp/setup-terraform@<commit sha> # vX.Y.Z
         with:
           terraform_version: 1.16.1
 
@@ -90,7 +90,7 @@ jobs:
           terraform show -no-color tfplan > "${RUNNER_TEMP}/plan.txt"
 
       - name: Comment
-        uses: kukv/terraform-plan-comment-action@9e0f42a0e418a10d7505a4978ebcdf9143bfaaaa # v1.0.0
+        uses: kukv/terraform-plan-comment-action@<commit sha> # vX.Y.Z
         with:
           exitcode: ${{ steps.plan.outputs.exitcode }}
           plan-json: ${{ runner.temp }}/plan.json
