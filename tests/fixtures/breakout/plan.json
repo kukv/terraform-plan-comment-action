@@ -1,0 +1,23 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.16.1",
+  "resource_changes": [
+    {
+      "address": "terraform_data.addr[\"k` @octocat [fake](https://example.invalid) `\"]",
+      "change": {
+        "actions": [
+          "create"
+        ]
+      }
+    },
+    {
+      "address": "terraform_data.new[\"``\"]",
+      "previous_address": "terraform_data.old[\"`\"]",
+      "change": {
+        "actions": [
+          "no-op"
+        ]
+      }
+    }
+  ]
+}

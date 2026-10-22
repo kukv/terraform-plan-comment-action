@@ -1,0 +1,11 @@
+Terraform will perform the following actions:
+
+  # terraform_data.addr["k` @octocat [fake](https://example.invalid) `"] will be created
+  + resource "terraform_data" "addr" {
+      + input = <<-EOT
+            line1
+            ```<!-- hiddeninjected-outside-fence
+        EOT
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.

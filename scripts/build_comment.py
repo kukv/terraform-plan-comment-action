@@ -28,6 +28,24 @@ import sys
 DIFF_MARKER = re.compile(r"^([ \t]*)([-+~])", re.MULTILINE)
 
 
+def longest_backtick_run(text):
+    return max((len(run) for run in re.findall(r"`+", text)), default=0)
+
+
+def code_span(text):
+    """Wrap text in inline code that no backtick inside it can close."""
+    ticks = "`" * (longest_backtick_run(text) + 1)
+    if text.startswith("`") or text.endswith("`"):
+        text = " {} ".format(text)
+    return ticks + text + ticks
+
+
+def code_block(text, info=""):
+    """Fence text so that no line inside it can close the block."""
+    fence = "`" * max(3, longest_backtick_run(text) + 1)
+    return [fence + info, text, fence]
+
+
 def headings(title):
     """Return the (normal, failed) headings, scoped by TITLE when it is set."""
     scope = " ({})".format(title) if title else ""
@@ -107,27 +125,21 @@ def changes(plan, plan_text, heading):
 
     for mark, change in changed_resources(plan):
         if change.get("previous_address") is not None:
-            body = "`{}` → `{}`".format(change["previous_address"], change["address"])
+            body = "{} → {}".format(
+                code_span(change["previous_address"]), code_span(change["address"])
+            )
         else:
-            body = "`{}`".format(change["address"])
+            body = code_span(change["address"])
         lines.append("- {} {}".format(mark, body))
 
-    lines += [
-        "",
-        "<details>",
-        "<summary>Plan details</summary>",
-        "",
-        "```diff",
-        DIFF_MARKER.sub(r"\2\1", plan_text.rstrip("\n")),
-        "```",
-        "",
-        "</details>",
-    ]
+    lines += ["", "<details>", "<summary>Plan details</summary>", ""]
+    lines += code_block(DIFF_MARKER.sub(r"\2\1", plan_text.rstrip("\n")), "diff")
+    lines += ["", "</details>"]
     return lines
 
 
 def failed(error_message, heading):
-    return [heading, "", "```", error_message, "```"]
+    return [heading, "", *code_block(error_message)]
 
 
 def read(path):

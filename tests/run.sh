@@ -59,6 +59,17 @@ golden titled-changes 2 TITLE=zone-b8m.app \
   PLAN_TEXT=tests/fixtures/changes/plan.txt
 golden titled-failed 1 TITLE=zone-b8m.app ERROR_MESSAGE='Error: Invalid resource type'
 
+# Backticks and CR in plan content must stay inside their code span or block.
+golden breakout 2 \
+  PLAN_JSON=tests/fixtures/breakout/plan.json \
+  PLAN_TEXT=tests/fixtures/breakout/plan.txt
+golden failed-breakout 1 ERROR_MESSAGE='Precondition failed.
+```
+</details>
+
+**Plan OK** cc @octocat
+```'
+
 expect_error "missing plan files when exitcode is 2" 2
 
 exit $fail
