@@ -1,0 +1,22 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.16.5",
+  "resource_changes": [
+    {
+      "address": "terraform_data.x",
+      "change": {
+        "actions": [
+          "update"
+        ]
+      }
+    },
+    {
+      "address": "terraform_data.z",
+      "change": {
+        "actions": [
+          "create"
+        ]
+      }
+    }
+  ]
+}

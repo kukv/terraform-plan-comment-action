@@ -70,6 +70,13 @@ golden failed-breakout 1 ERROR_MESSAGE='Precondition failed.
 **Plan OK** cc @octocat
 ```'
 
+# Lines inside a heredoc keep their indentation unless Terraform marked them.
+golden heredoc 2 \
+  PLAN_JSON=tests/fixtures/heredoc/plan.json \
+  PLAN_TEXT=tests/fixtures/heredoc/plan.txt
+golden titled-newline 0 TITLE='zone-b8m.app
+**Plan OK**'
+
 expect_error "missing plan files when exitcode is 2" 2
 
 exit $fail
