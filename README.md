@@ -56,6 +56,9 @@ the result. `tests/run.sh` checks the output against the expected markdown in `t
 ## Usage
 
 ```yaml
+on:
+  pull_request:
+
 permissions:
   contents: read
 
@@ -66,11 +69,11 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@<commit sha> # vX.Y.Z
         with:
           persist-credentials: false
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@<commit sha> # vX.Y.Z
         with:
           terraform_version: 1.16.1
 
@@ -88,7 +91,7 @@ jobs:
           terraform show -no-color tfplan > "${RUNNER_TEMP}/plan.txt"
 
       - name: Comment
-        uses: kukv/terraform-plan-comment-action@v1
+        uses: kukv/terraform-plan-comment-action@<commit sha> # vX.Y.Z
         with:
           exitcode: ${{ steps.plan.outputs.exitcode }}
           plan-json: ${{ runner.temp }}/plan.json
@@ -105,7 +108,10 @@ jobs:
 `hashicorp/setup-terraform` wrapper. If you disable the wrapper, capture the exit code yourself
 and pass it in.
 
-The example above uses a tag for readability. Pin to a full commit SHA in real use.
+The example runs on `pull_request`. Do not switch it to `pull_request_target`: that would run
+the pull request's Terraform code with a token that can write to the base repository.
+
+Actions are pinned to a full commit SHA, with the version in a comment. Pin the same way in real use.
 
 ## Contributing
 

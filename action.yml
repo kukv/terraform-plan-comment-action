@@ -32,22 +32,29 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Build and post comment
+    - name: Build comment
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github-token }}
         EXITCODE: ${{ inputs.exitcode }}
         PLAN_JSON: ${{ inputs.plan-json }}
         PLAN_TEXT: ${{ inputs.plan-text }}
         ERROR_MESSAGE: ${{ inputs.error-message }}
         TITLE: ${{ inputs.title }}
-        PR_NUMBER: ${{ inputs.pr-number || github.event.pull_request.number }}
-        REPO: ${{ github.repository }}
         COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
         set -euo pipefail
 
-        comment_file="${RUNNER_TEMP}/terraform-plan-comment.md"
-        python3 "${GITHUB_ACTION_PATH}/scripts/build_comment.py" > "$comment_file"
-        gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file "$comment_file"
+        python3 "${GITHUB_ACTION_PATH}/scripts/build_comment.py" > "${RUNNER_TEMP}/terraform-plan-comment.md"
+
+    # Only this step sees the token.
+    - name: Post comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ inputs.pr-number || github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+
+        gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file "${RUNNER_TEMP}/terraform-plan-comment.md"

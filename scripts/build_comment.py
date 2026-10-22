@@ -25,11 +25,63 @@ import sys
 
 # Terraform indents the action marker; move it to the start of the line so the
 # diff block colours the change.
-DIFF_MARKER = re.compile(r"^([ \t]*)([-+~])", re.MULTILINE)
+DIFF_MARKER = re.compile(r"^([ \t]*)([-+~])")
+# An attribute whose value is a multi-line string, rendered as a heredoc.
+HEREDOC_START = re.compile(r"^([ \t]*)([-+~] )?.*<<-?(\w+)$")
+
+
+def mark_diff(plan_text):
+    """Move action markers to the start of their line.
+
+    Inside a heredoc, only Terraform's own per-line markers move (two columns
+    right of the attribute name); the string's content stays as it is.
+    """
+    lines = []
+    heredoc = None  # (delimiter, column of the per-line markers)
+    for line in plan_text.split("\n"):
+        if heredoc is None:
+            start = HEREDOC_START.match(line)
+            if start:
+                name_column = len(start.group(1)) + (2 if start.group(2) else 0)
+                heredoc = (start.group(3), name_column + 2)
+            lines.append(DIFF_MARKER.sub(r"\2\1", line))
+            continue
+
+        delimiter, column = heredoc
+        body = line.strip()
+        if body == delimiter or body.startswith(delimiter + " "):
+            heredoc = None
+            lines.append(line)
+            continue
+        marker = DIFF_MARKER.match(line)
+        if marker and len(marker.group(1)) == column:
+            line = DIFF_MARKER.sub(r"\2\1", line)
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def longest_backtick_run(text):
+    return max((len(run) for run in re.findall(r"`+", text)), default=0)
+
+
+def code_span(text):
+    """Wrap text in inline code that no backtick inside it can close."""
+    ticks = "`" * (longest_backtick_run(text) + 1)
+    if text.startswith("`") or text.endswith("`"):
+        text = " {} ".format(text)
+    return ticks + text + ticks
+
+
+def code_block(text, info=""):
+    """Fence text so that no line inside it can close the block."""
+    fence = "`" * max(3, longest_backtick_run(text) + 1)
+    return [fence + info, text, fence]
 
 
 def headings(title):
     """Return the (normal, failed) headings, scoped by TITLE when it is set."""
+    # A line break would end the heading; keep the title on one line.
+    title = " ".join(title.split())
     scope = " ({})".format(title) if title else ""
     return (
         "### 🏗 Terraform Plan" + scope,
@@ -107,27 +159,21 @@ def changes(plan, plan_text, heading):
 
     for mark, change in changed_resources(plan):
         if change.get("previous_address") is not None:
-            body = "`{}` → `{}`".format(change["previous_address"], change["address"])
+            body = "{} → {}".format(
+                code_span(change["previous_address"]), code_span(change["address"])
+            )
         else:
-            body = "`{}`".format(change["address"])
+            body = code_span(change["address"])
         lines.append("- {} {}".format(mark, body))
 
-    lines += [
-        "",
-        "<details>",
-        "<summary>Plan details</summary>",
-        "",
-        "```diff",
-        DIFF_MARKER.sub(r"\2\1", plan_text.rstrip("\n")),
-        "```",
-        "",
-        "</details>",
-    ]
+    lines += ["", "<details>", "<summary>Plan details</summary>", ""]
+    lines += code_block(mark_diff(plan_text.rstrip("\n")), "diff")
+    lines += ["", "</details>"]
     return lines
 
 
 def failed(error_message, heading):
-    return [heading, "", "```", error_message, "```"]
+    return [heading, "", *code_block(error_message)]
 
 
 def read(path):
